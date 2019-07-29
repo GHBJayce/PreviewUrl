@@ -9,20 +9,23 @@ page.viewportSize = {
     height: 480
 };
 
-page.clipRect = {
-    top: 0,
-    left: 0,
-    width: 640,
-    height: 480,
-};
-
-page.open(sys.args[1], function () {
+page.open(sys.args[1], function (status) {
     // page.render('./picture.png');
     // page.zoomFactor = 0.7;
     // var path = './output.txt';
     // var file = fs.open(path, 'w');
     // file.write(page.renderBase64());
     // file.close();
-    console.log(page.renderBase64());
+    if (status === 'success') {
+        page.clipRect = {
+            top: 0,
+            left: 0,
+            width: 640,
+            height: 480,
+        };
+        console.log(page.renderBase64());
+    } else {
+        console.log('error');
+    }
     phantom.exit();
 });

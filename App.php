@@ -51,16 +51,18 @@ class App
      */
     public function command()
     {
-        set_time_limit(120);
+        set_time_limit(240);
         header('Content-Type: image/jpeg');
         $url = $_GET['url'];
         $exe = __DIR__ . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phantomjs.exe';
         $script = __DIR__ .DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'script.js';
         $res = exec("{$exe} {$script} {$url}");
+        if ($res !== 'error') {
 //        var_dump($res);die;
-        $image = imagecreatefromstring(base64_decode($res));
-        imagejpeg($image);
-        imagedestroy($image);
+            $image = imagecreatefromstring(base64_decode($res));
+            imagejpeg($image);
+            imagedestroy($image);
+        }
     }
 
     public function index()
@@ -79,60 +81,71 @@ class App
 
     public function test()
     {
-        echo <<<EOF
-<style>
-body {
-    background-color: #078090;
-}
-img {
-    width: 180px;
-    height: 140px;
-}
-ul {
-    list-style: none;
-}
-li {
-    float: left;
-    background-color: #9E9E9E;
-    text-align: center;
-    font-size: 13px;
-    margin: 0 25px 25px 0;
-}
-</style>
-EOF;
-
         $root = 'http://'.$_SERVER['HTTP_HOST'];
         $path = '/index.php?action=';
 
-        $list = [
-            '<ul>',
-            '<li><a href="{{ baidu }}"><img data-original="'. $root . $path .'command&url={{ baidu }}"><p>百度</p></a></li>',
-            '<li><a href="{{ so }}"><img data-original="'. $root . $path .'command&url={{ so }}"><p>360搜索</p></a></li>',
-            '<li><a href="{{ bing }}"><img data-original="'. $root . $path .'command&url={{ bing }}"><p>bing搜索</p></a></li>',
-            '<li><a href="{{ hotbot }}"><img data-original="'. $root . $path .'command&url={{ hotbot }}"><p>HotBot搜索</p></a></li>',
-            '<li><a href="{{ baidu }}"><img data-original="'. $root . $path .'command&url={{ baidu }}"><p>百度</p></a></li>',
-            '<li><a href="{{ so }}"><img data-original="'. $root . $path .'command&url={{ so }}"><p>360搜索</p></a></li>',
-            '<li><a href="{{ bing }}"><img data-original="'. $root . $path .'command&url={{ bing }}"><p>bing搜索</p></a></li>',
-            '<li><a href="{{ hotbot }}"><img data-original="'. $root . $path .'command&url={{ hotbot }}"><p>HotBot搜索</p></a></li>',
-            '<li><a href="{{ baidu }}"><img data-original="'. $root . $path .'command&url={{ baidu }}"><p>百度</p></a></li>',
-            '<li><a href="{{ so }}"><img data-original="'. $root . $path .'command&url={{ so }}"><p>360搜索</p></a></li>',
-            '<li><a href="{{ bing }}"><img data-original="'. $root . $path .'command&url={{ bing }}"><p>bing搜索</p></a></li>',
-            '<li><a href="{{ hotbot }}"><img data-original="'. $root . $path .'command&url={{ hotbot }}"><p>HotBot搜索</p></a></li>',
-            '</ul>',
-            '<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>',
-            '<script src="https://cdn.bootcss.com/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script>',
-            '<script>$(function () {$("img").lazyload({effect: "fadeIn"});});</script>',
+        $url_list = [
+            [
+                'url' => 'https://baidu.com',
+                'text' => '百度',
+            ],
+            [
+                'url' => 'https://so.com',
+                'text' => '360搜索',
+            ],
+            [
+                'url' => 'https://cn.bing.com',
+                'text' => 'bing搜索',
+            ],
+            [
+                'url' => 'https://www.hotbot.com',
+                'text' => 'HotBot搜索',
+            ],
+            [
+                'url' => 'https://www.sina.com.cn',
+                'text' => '新浪',
+            ],
+            [
+                'url' => 'http://www.sohu.com',
+                'text' => '搜狐',
+            ],
+            [
+                'url' => 'https://www.qq.com',
+                'text' => '腾讯网',
+            ],
+            [
+                'url' => 'http://www.ifeng.com',
+                'text' => '凤凰网',
+            ],
+            [
+                'url' => 'https://weibo.com',
+                'text' => '微博',
+            ],
+            [
+                'url' => 'https://www.youku.com',
+                'text' => '优酷',
+            ],
+            [
+                'url' => 'http://www.iqiyi.com',
+                'text' => '爱奇艺',
+            ],
+            [
+                'url' => 'https://taobao.com',
+                'text' => '淘宝',
+            ],
         ];
 
-        $replace_url = [
-            '{{ baidu }}' => 'https://baidu.com',
-            '{{ so }}' => 'https://so.com',
-            '{{ bing }}' => 'https://cn.bing.com',
-            '{{ hotbot }}' => 'https://www.hotbot.com',
-        ];
+        $lis = '';
 
-        $content = strtr(implode('', $list), $replace_url);
+        foreach ($url_list as $v) {
+            $lis .= "<li><a href=\"{$v['url']}\"><img data-original=\"{$root}{$path}command&url={$v['url']}\"><p>{$v['text']}</p></a></li>";
+        }
 
-        echo $content;
+        $html = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'test.html');
+        $html = strtr($html, [
+            '{{ $url_list }}' => $lis,
+        ]);
+
+        echo $html;
     }
 }

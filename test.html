@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>PreviewUrl</title>
+    <style>
+        body {
+            background-color: #078090;
+        }
+        img {
+            width: 180px;
+            height: 140px;
+        }
+        ul {
+            list-style: none;
+        }
+        li {
+            float: left;
+            background-color: #9E9E9E;
+            text-align: center;
+            font-size: 13px;
+            margin: 0 25px 25px 0;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    {{ $url_list }}
+</ul>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/jquery_lazyload/1.9.7/jquery.lazyload.min.js"></script>
+<script>
+    $(function () {
+        $("img").lazyload({placeholder: "https://upload.wikimedia.org/wikipedia/commons/1/10/Loading-special.gif", effect: "fadeIn"});
+    });
+</script>
+</body>
+</html>
