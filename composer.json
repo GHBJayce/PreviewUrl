@@ -1,0 +1,19 @@
+{
+    "name": "ghbjayce/preview-url",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "GHBJayce",
+            "email": "jaycedeng@outlook.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "App\\": ""
+        }
+    },
+    "require": {
+        "jonnyw/php-phantomjs": "4.6.1"
+    }
+}
