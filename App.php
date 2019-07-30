@@ -9,43 +9,79 @@ class App
 {
     public function phpPhantomjs()
     {
-        /*
-         * 按照如下写法，跑起来我发现会运行超时，并且会卡死nginx服务，重启nginx服务无法正常打开页面，必须重启电脑才能恢复服务
-         *
-         * 估计哪个步骤出了问题
-         *
-         * 我的环境：php 5.6 + nginx 1.11.5
-         */
-        $location = __DIR__ . DIRECTORY_SEPARATOR . 'script';
-        $serviceContainer = ServiceContainer::getInstance();
+        $url = empty($_GET['url']) ? 'https://baidu.com' : $_GET['url'];
 
-        $procedureLoader = $serviceContainer->get('procedure_loader_factory')->createProcedureLoader($location);
+        if (!parse_url($url)) {
+            exit('错误的url');
+        }
 
-        $client = Client::getInstance();
+        $replace_list = [
+            'http://' => '^_',
+            'https://' => '^_^',
+            '\\' => ord('\\'),
+            '/' => ord('/'),
+            ':' => ord(':'),
+            '*' => ord('*'),
+            '?' => ord('?'),
+            '"' => ord('"'),
+            '<' => ord('<'),
+            '>' => ord('>'),
+            '|' => ord('|'),
+        ];
 
-        $client->setProcedure('get_capture_base64');
+        $screenshot_path = 'screenshot/'.strtr(rtrim($url, '/'), $replace_list).'.jpg';
 
-        $client->getProcedureLoader()->addLoader($procedureLoader);
+        if (!file_exists($screenshot_path)) {
+            /*
+             * 按照自定义脚本写法，跑起来我发现会运行超时，并且会卡死nginx服务，重启nginx服务无法正常打开页面，必须重启电脑才能恢复服务
+             *
+             * 估计哪个步骤出了问题
+             *
+             * 我的环境：php 5.6 + nginx 1.11.5
+             */
+            /*
+            $location = __DIR__ . DIRECTORY_SEPARATOR . 'script';
+            $serviceContainer = ServiceContainer::getInstance();
+            $procedureLoader = $serviceContainer->get('procedure_loader_factory')->createProcedureLoader($location);
+            */
 
-        $client->getEngine()->setPath('F:\\installed\\phpStudy\\PHPTutorial\\WWW\\preview-url\\bin\\phantomjs.exe');
+            $client = Client::getInstance();
+            $client->getEngine()->setPath(__DIR__.DIRECTORY_SEPARATOR.'bin/phantomjs.exe');
 
-//        $request  = $client->getMessageFactory()->createRequest();
-//        $response = $client->getMessageFactory()->createResponse();
+            /*
+            $client->setProcedure('get_capture_base64');
+            $client->getProcedureLoader()->addLoader($procedureLoader);
+            */
 
-        $request = $client->getMessageFactory()->createCaptureRequest('https://baidu.com', 'get');
-        $request->setViewportSize(640, 480);
+            /*
+            $request  = $client->getMessageFactory()->createRequest();
+            $response = $client->getMessageFactory()->createResponse();
+            */
 
-        var_dump($client->getProcedure());die; // 下面之前dump还未调用服务
+            $width = '1024';
+            $height = '768';
+            $top = 0;
+            $left = 0;
 
-        // 以下code已经开始调用服务
-        $response = $client->getMessageFactory()->createResponse();
-        $client->send($request, $response);
+            $request = $client->getMessageFactory()->createCaptureRequest($url, 'get');
+            $request->setOutputFile($screenshot_path);
+            $request->setViewportSize($width, $height);
+            $request->setCaptureDimensions($width, $height, $top, $left);
+
+            // var_dump($client->getProcedure());die; // 下面之前dump还未调用服务
+
+            // 以下code已经开始调用服务
+            $response = $client->getMessageFactory()->createResponse();
+            $client->send($request, $response);
+        }
+
+        $this->generate($screenshot_path);
     }
 
     /**
      * 直接用命令调用服务
      *
-     * 跑了几次结果发现，有一些网址内容太多没办法在30秒内跑完
+     * 跑了几次结果发现，有一些网址内容大多没办法在30秒内跑完
      *
      * 能跑出图来一般要花个3秒甚至更久
      */
@@ -133,12 +169,41 @@ class App
                 'url' => 'https://taobao.com',
                 'text' => '淘宝',
             ],
+            [
+                'url' => 'https://tmall.com',
+                'text' => '天猫',
+            ],
+            [
+                'url' => 'https://jd.com',
+                'text' => '京东',
+            ],
+            [
+                'url' => 'https://www.php.net',
+                'text' => 'PHP',
+            ],
+            [
+                'url' => 'https://www.bootcss.com',
+                'text' => 'Bootstrap',
+            ],
+            [
+                'url' => 'https://v3.bootcss.com/components/#progress-striped',
+                'text' => '组件 · Bootstrap v3 中文文档',
+            ],
+            [
+                'url' => 'https://learnku.com/docs/laravel/5.8/releases/3876',
+                'text' => 'Laravel 5.8中文文档',
+            ],
+            [
+                'url' => 'http://jonnnnyw.github.io/php-phantomjs',
+                'text' => 'php-phantomjs docs',
+            ],
         ];
 
         $lis = '';
 
         foreach ($url_list as $v) {
-            $lis .= "<li><a href=\"{$v['url']}\"><img data-original=\"{$root}{$path}command&url={$v['url']}\"><p>{$v['text']}</p></a></li>";
+//            $lis .= "<li><a href=\"{$v['url']}\"><img data-original=\"{$root}{$path}command&url={$v['url']}\"><p>{$v['text']}</p></a></li>";
+            $lis .= "<li><a href=\"{$v['url']}\"><img data-original=\"{$root}{$path}phpPhantomjs&url={$v['url']}\"><p>{$v['text']}</p></a></li>";
         }
 
         $html = file_get_contents(__DIR__.DIRECTORY_SEPARATOR.'test.html');
@@ -147,5 +212,13 @@ class App
         ]);
 
         echo $html;
+    }
+
+    protected function generate($image_path)
+    {
+        header('Content-Type: image/jpeg');
+        $image = imagecreatefromjpeg($image_path);
+        imagejpeg($image);
+        imagedestroy($image);
     }
 }
